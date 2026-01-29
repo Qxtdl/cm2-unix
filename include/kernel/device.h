@@ -11,7 +11,7 @@ typedef uint8_t dev_t;
 struct device;
 
 struct device_driver {
-    struct device* (*create)(int8_t* minor, const void* args); //returns minor number or a negative number on failure
+    struct device* (*create)(int8_t* minor, const void* args); //returns device pointer or a negative errno in minor
     int (*destroy)(uint8_t minor);
     struct device* (*lookup)(uint8_t minor);
     const char* name;
@@ -30,7 +30,7 @@ struct device {
 #define DEVICE_DRIVER_MAX 16
 extern struct device_driver driver_registry[DEVICE_DRIVER_MAX];
 
-struct device* device_create(uint8_t major, const void* args);
-struct device* device_lookup(dev_t dev);
-int device_destroy(dev_t dev);
+struct device* device_create(dev_t* devno, uint8_t major, const void* args);
+struct device* device_lookup(dev_t devno);
+int device_destroy(dev_t devno);
 
