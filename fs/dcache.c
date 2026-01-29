@@ -1,7 +1,6 @@
 #include <stddef.h>
-#include "dcache.h"
-#include "../lib/stdlib.h"
-
+#include <lib/stdlib.h>
+#include <fs/dcache.h>
 
 struct dentry dentry_pool[DENTRY_MAX];
 uint8_t dentry_free_list[DENTRY_MAX];
@@ -67,7 +66,7 @@ uint8_t dentry_alloc()
 
 int dentry_add_child(struct dentry* dentry, uint8_t child) {
     uint8_t index = dentry->packed & DENTRY_CHILD_COUNT_MSK;
-    if (index >= DENTRY_MAX_CHILDREN) {
+    if (index <= DENTRY_MAX_CHILDREN) {
         dentry->children[index++] = child;
         dentry->packed = (dentry->packed & ~DENTRY_CHILD_COUNT_MSK) | index;
         return 0;
@@ -153,6 +152,9 @@ int dentry_mount(struct superblock* fs, const char* mountpoint)
 {
     uint8_t mount_index = dentry_lookup(mountpoint);
     struct dentry* mount = &dentry_pool[mount_index];
+    if (mount_index == DENTRY_INDEX_NIL) {
+        return -1;
+    }
     
     dentry_clean_node(mount_index); //remove any cached nodes from the mountpoint
     uint8_t packed = mount->packed;
@@ -162,6 +164,19 @@ int dentry_mount(struct superblock* fs, const char* mountpoint)
     }
 
     mount->fs = fs;
+
+    return 0; //success!
+}
+
+int dentry_umount(const char* mountpoint) {
+    uint8_t mount_index = dentry_lookup(mountpoint);
+    struct dentry* mount = &dentry_pool[mount_index];
+
+    if (mount_index == DENTRY_INDEX_NIL) {
+        return -1;
+    }
+    //implement unmounting logic
+    return 0;
 }
 
 

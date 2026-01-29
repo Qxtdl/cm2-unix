@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <lib/stdlib.h>
 
 uint32_t strnlen(const char* str, uint32_t max_size)
 {
@@ -52,8 +53,5 @@ void memcpy(void* dest, void* source, uint32_t size)
         ((uint8_t*) dest)[size] = ((uint8_t*) source)[size];
     }
 }
-
-
-
 
 
