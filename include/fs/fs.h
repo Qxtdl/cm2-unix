@@ -32,6 +32,7 @@ struct super_ops {
     int (*umount)(struct superblock* fs);
     int (*mkdir)(struct superblock* fs, struct inode* dir, char* name);
     int (*rmdir)(struct superblock* fs, struct inode* dir, char* name);
+    int (*unlink)(struct superblock* fs, struct inode* dir, char* name);
 };
 
 //these operate on file descriptors
