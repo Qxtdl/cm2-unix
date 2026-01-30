@@ -4,7 +4,7 @@ struct tty_hardware_interface;
 
 struct tty_device {
     struct device base;
-    struct tty_hardware_interface* tty;
+    volatile struct tty_hardware_interface* tty;
 };
 
 #define TTY_IOCTL_CLEAR 0

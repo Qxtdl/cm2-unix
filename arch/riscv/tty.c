@@ -34,7 +34,7 @@ void tty_init() {
     tty_driver->name = "generic tty";
 }
 
-//create a tty instance, args is unused
+//create a tty instance
 struct device* tty_create(int8_t* minor, const void* args)
 {
     for (int8_t i = 0; i < MAX_TTY_COUNT; i++) {
@@ -81,14 +81,13 @@ uint32_t tty_read(struct device* dev, void* buffer, uint32_t count, uint32_t off
 uint32_t tty_write(struct device* dev, const void* buffer, uint32_t count, uint32_t offset)
 {
     struct tty_device* tty = (struct tty_device*) dev;
-    struct tty_hardware_interface* tty_interface = tty->tty;
+    volatile struct tty_hardware_interface* tty_interface = tty->tty;
     if (tty->base.ops == NULL) {
         return 0;
     }
 
-    //TODO: implement scroll buffer
-
-    char* str = buffer;
+    //NOTE: i would have wished for a scroll buffer but thats just way too much of a waste of space and cpu time
+    const char* str = buffer;
     for (uint32_t i = 0; i < count; i++) {
 
         if (str[i] == '\n' || tty_interface->cursor_location == 255)
@@ -96,8 +95,8 @@ uint32_t tty_write(struct device* dev, const void* buffer, uint32_t count, uint3
             tty_interface->cursor_location = ((tty_interface->cursor_location + 32) & 0b11100000);
             continue;
         }
-        tty_interface->cursor_location++;
         tty_interface->character = str[i++];
+        tty_interface->cursor_location++;
         tty_interface->write = 1;
     }
     
