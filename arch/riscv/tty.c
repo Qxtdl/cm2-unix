@@ -95,7 +95,7 @@ uint32_t tty_write(struct device* dev, const void* buffer, uint32_t count, uint3
             tty_interface->cursor_location = ((tty_interface->cursor_location + 32) & 0b11100000);
             continue;
         }
-        tty_interface->character = str[i++];
+        tty_interface->character = str[i];
         tty_interface->cursor_location++;
         tty_interface->write = 1;
     }
