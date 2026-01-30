@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <fs/fs.h>
 #include <fs/dcache.h>
-#include <kernel/vfs.h>
+#include <fs/vfs.h>
 #include <lib/stdlib.h>
 
 //this is just a private type
