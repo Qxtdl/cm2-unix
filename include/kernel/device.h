@@ -27,6 +27,7 @@ struct device_driver {
     struct device* (*create)(int8_t* minor, const void* args); //returns device pointer or a negative errno in minor
     int (*destroy)(uint8_t minor);
     struct device* (*lookup)(uint8_t minor);
+    void (*update)(); //update all instances of a driver
     const char* name;
 };
 
@@ -56,4 +57,5 @@ extern struct device_driver driver_registry[DEVICE_DRIVER_MAX];
 struct device* device_create(dev_t* devno, uint8_t major, const void* args);
 struct device* device_lookup(dev_t devno);
 int device_destroy(dev_t devno);
+void device_update(); //global device update
 

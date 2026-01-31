@@ -69,4 +69,13 @@ int device_destroy(dev_t devno)
     return driver->destroy(minor);
 }
 
+void device_update() {
+    for (int i = 0; i < DEVICE_DRIVER_MAX; i++) {
+        struct device_driver* driver = &driver_registry[i];
+        if (driver->update == NULL) {
+            break;
+        }
+        driver->update();
+    }
+}
 
