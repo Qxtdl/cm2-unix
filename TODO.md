@@ -1,12 +1,12 @@
 
 # TODO's
 
-##General
+## General
 * seperate architecture dependent code better
 * add configuration ability to makefile using either a .conf file or text user interface
 * make buffer and queue sizes configurable via makefile
 
-##VFS
+## VFS
 
 * find out how to bind syscalls to VFS calls
 * implement filesystem e.g FAT
@@ -16,7 +16,7 @@
     - maybe not make it part of the VFS?
 
 
-##Syscalls
+## Syscalls
 
 * add posix_spawn like syscall
 * add pidwait syscall
