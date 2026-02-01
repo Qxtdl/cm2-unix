@@ -125,30 +125,6 @@ int vfs_unlink(const char* path)
 
 }
 
-struct device_request* current_request;
-struct proc* yeet;
-
-void dev_write(dev_t devno, void* buffer, uint32_t count)
-{
-    current_request = device_newreq(buffer, count, 0, DEVICE_OP_WR);
-    struct device* dev = device_lookup(devno);
-    device_queue_action(dev, current_request);
-    yeet = current_process;
-    current_process->state = BLOCKED;
-}
-
-void vfs_update()
-{
-
-    if (current_request->state == DEVICE_STATE_FINISHED) {
-        yeet->state = READY;
-        yeet->return_value = current_request->count;
-        device_free_req(current_request);
-        proc_enqueue(yeet); //allow the process to be executed again
-    }
- 
-}
-
 
 
 

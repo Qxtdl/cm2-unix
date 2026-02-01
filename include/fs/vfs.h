@@ -20,8 +20,3 @@ void vfs_umount(const char* mount);
 int vfs_mkdir(const char* path);
 int vfs_rmdir(const char* path);
 int vfs_unlink(const char* path);
-
-void dev_write(dev_t devno, void* buffer, uint32_t count);
-
-void vfs_update();
-
