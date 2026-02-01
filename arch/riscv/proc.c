@@ -2,6 +2,7 @@
 #include <kernel/device.h>
 #include <lib/stdlib.h>
 #include <kernel/syscall.h>
+#include <kernel/panic.h>
 #include <stddef.h>
 
 struct proc process_table[MAX_PROCESSES];
@@ -89,6 +90,10 @@ void proc_update()
     //if the current process is ready we queue it up for execution
     if (process->state == READY && process != NULL) {
         proc_enqueue(process);
+    }
+
+    if (free_processes_count == MAX_PROCESSES) {
+        panic();
     }
 
     //get a new process from the top of the queue
