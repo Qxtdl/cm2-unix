@@ -24,9 +24,15 @@ LNKP ?=
 
 MN_FILE ?= main.elf
 
-CFLAGS ?= -march=rv32i -mabi=ilp32 -ffreestanding -Os -Wall -Wextra -Wno-unused-parameter $(INCL)
+# IF debugging stack faliures:
+# Uncomment below code and switch -O2 flag to -Os
 
-LDFLAGS ?= -nostdlib -nostartfiles -static -march=rv32i -mabi=ilp32 -Os
+OPTIMIZATION = -O2
+
+CFLAGS ?= -march=rv32i -mabi=ilp32 -ffreestanding $(OPTIMIZATION) -Wall -Wextra -Wno-unused-parameter $(INCL) \
+	-g -fstack-protector-all -fverbose-asm
+
+LDFLAGS ?= -nostdlib -nostartfiles -static -march=rv32i -mabi=ilp32 $(OPTIMIZATION)
 
 OBJS = $(CSRCS:%.c=%.o) $(ASRCS:%.S=%.o)
 
@@ -45,12 +51,20 @@ $(MN_FILE): $(OBJS)
 
 image: $(MN_FILE)
 	$(OBJCOPY) -O binary $(MN_FILE) image.bin
+	python $(ROOT)/arch/$(ARCH)/$(ARCH)_encoder.py image.bin
 
 size:
 	$(READELF) -S $(MN_FILE)
 
+dump:
+	$(TOOLCHAIN)-objdump -d -M no-aliases main.elf >> dump.s
+	$(TOOLCHAIN)-objdump -S -d -M no-aliases main.elf >> verbose_dump.s
+
 clean:
 	rm -f $(OBJS) $(MN_FILE) image.bin
+	rm -rf dump.s
+	rm -rf verbose_dump.s
+	rm -rf preprocessed.c
 
 rebuild: clean image size
 
