@@ -1,7 +1,9 @@
 #include <stddef.h>
+#include <stdbool.h>
 #include <kernel/device.h>
 #include <kernel/majors.h>
 #include <kernel/tty.h>
+#include <arch/riscv/memorymap.h>
 
 
 //the hardware interface implementation
@@ -194,3 +196,19 @@ void tty_update(struct device* dev)
 
 }
 
+void freestanding_tty_puts(const char *s) {
+    uint8_t i = 0;
+    while (s[i] != '\0')
+    {
+        bool newline = false;
+        if (s[i] == '\n' || *TTY_LOC == 255)
+        {
+            *TTY_LOC = ((*TTY_LOC + 32) & 0b11100000);
+            newline = true;
+        }
+        if (!newline)
+            (*TTY_LOC)++;;
+        *TTY_CHAR = s[i++];
+        *TTY_WRITE = true;
+    }    
+}
