@@ -67,14 +67,13 @@ size:
 	$(READELF) -S $(MN_FILE)
 
 dump:
-	$(TOOLCHAIN)-objdump -d -M no-aliases main.elf >> dump.s
-	$(TOOLCHAIN)-objdump -S -d -M no-aliases main.elf >> verbose_dump.s
+	$(TOOLCHAIN)-objdump -d -M no-aliases main.elf >> dump.s.dump
+	$(TOOLCHAIN)-objdump -S -d -M no-aliases main.elf >> verbose_dump.s.dump
 
 clean:
 	rm -f $(OBJS) $(MN_FILE) image.bin
-	rm -rf dump.s
-	rm -rf verbose_dump.s
-	rm -rf preprocessed.c
+	rm -rf dump.s.dump
+	rm -rf verbose_dump.s.dump
 
 rebuild: clean image size
 
