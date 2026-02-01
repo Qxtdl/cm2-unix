@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include <kernel/panic.h>
+
 uint32_t __stack_chk_guard = 0xDEADC0DE;
 
 void __stack_chk_fail(void) {
@@ -16,5 +18,6 @@ void __stack_chk_fail(void) {
     *((uint8_t *)0xFFF8) = 2;    // POST = FAIL
     *((uint8_t *)0xFFF7) = 0xFF; // FCAUSE = STACK CORRUPTED
 
+    panic();
     while (1);
 }
