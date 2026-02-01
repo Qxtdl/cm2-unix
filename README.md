@@ -21,5 +21,6 @@ bear -- make
 
 ## Contributing
 
-work in progress...
+Contributions are very much apreciated, the project is still in the early stages so a lot will change.
+
 
