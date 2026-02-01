@@ -35,7 +35,7 @@ LDFLAGS ?= -nostdlib -nostartfiles -static -march=rv32i -mabi=ilp32
 
 
 ifeq ($(DEBUG), true)
-	CFLAGS += -g -fstack-protector-all -fverbose-asm -O2
+	CFLAGS += -g -fstack-protector-all -fverbose-asm -O2 -D__DEBUG__
 	LDFLAGS += -O2
 else
 	CFLAGS += -Os
@@ -60,7 +60,7 @@ $(MN_FILE): $(OBJS)
 
 image: $(MN_FILE)
 	$(OBJCOPY) -O binary $(MN_FILE) image.bin
-	/bin/env python3 $(ROOT)/arch/$(ARCH)/$(ARCH)_encoder.py image.bin
+	/bin/env python3 $(ROOT)/scripts/riscv_encoder.py image.bin
 
 size:
 	$(READELF) -S $(MN_FILE)
