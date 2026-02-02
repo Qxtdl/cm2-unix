@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <kernel/device.h>
+#include <fs/vfs.h>
 
 enum proc_state : uint8_t {
     BLOCKED,
@@ -17,6 +18,7 @@ typedef struct {
     uint8_t target_pid;
 } waitpid_t;
 
+
 #define SYSCALL_STATE_NIL 255
 #define SYSCALL_STATE_BEGIN 0
 //this should be made cross platform but i dont care anymore
@@ -31,9 +33,12 @@ struct proc {
     uint8_t syscall_state;
     uint8_t syscall_operation;
     uint8_t pid;
+
+    //this is the state that multi tick syscalls need
     union {
         dev_write_t dev_write_state;
         waitpid_t waitpid_state;
+        vfs_open_t open_state;
     };
 };
 
