@@ -15,7 +15,7 @@ dev_t disk0_devno;
 int8_t init_thread_exit;
 
 void init_thread() {
-    char test[] = "CM2-UNIX V0.2.1\nBooting...\n";
+    char test[] = "CM2-UNIX V0.2.2\nBooting...\n";
     char test1[] = "registered disk0 at 0xFFC3\n";
     init_thread_exit = 0;
     syscall(0, tty0_devno, (uint32_t) &test, sizeof(test) - 1);
@@ -31,7 +31,7 @@ void init_thread() {
 [[gnu::aligned(16)]] uint8_t test_thread_stack[128];
 char shell_name[] = "Shell v0.1.0\n";
 char prompt[] = "# ";
-char uname[] = "CM2-UNIX V0.2.1\n";
+char uname[] = "CM2-UNIX V0.2.2\n";
 char bad_command[] = "-shell: bad cmd\n";
 
 void test_thread() {
