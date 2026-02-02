@@ -25,40 +25,45 @@ void init_thread() {
     syscall(0, tty0_devno, (uint32_t) &test1, sizeof(test1) - 1);
     
     init_thread_exit = 1;
-    syscall(3, 0, 0, 0); //exit()
+    syscall(4, 0, 0, 0); //exit()
 }
 
 [[gnu::aligned(16)]] uint8_t test_thread_stack[128];
+char shell_name[] = "Shell v0.1.0\n";
+char prompt[] = "# ";
+char uname[] = "CM2-UNIX V0.2.1\n";
+char bad_command[] = "-shell: bad cmd\n";
 
 void test_thread() {
-    char test[] = "Shell v0.1.0\n";
-    char prompt[] = "# ";
-    char uname[] = "CM2-UNIX V0.2.1\n";
     
     //bodged pidwait
     while(init_thread_exit == 0) {
-        syscall(2, 0, 0, 0); //yield()
+        syscall(3, 0, 0, 0); //yield()
     };
 
     //dev_write(tty0_devno, &test, sizeof(test)-1);
-    syscall(0, tty0_devno, (uint32_t) &test, sizeof(test) - 1);
+    syscall(0, tty0_devno, (uint32_t) &shell_name, sizeof(shell_name) - 1);
     
     while(1) {
+        char buffer[16] = {0};
         //write prompt
         syscall(0, tty0_devno, (uint32_t) &prompt, sizeof(prompt) - 1);
         //read input
-        char buffer[16] = {0};
-        syscall(1, tty0_devno, (uint32_t) &buffer, sizeof(buffer));
+        int size = syscall(1, tty0_devno, (uint32_t) &buffer, sizeof(buffer));
 
-        if (strncmp(buffer, "uname", 16) == 0) {
+        if (strncmp(buffer, "uname", size) == 0) {
             syscall(0, tty0_devno, (uint32_t) &uname, sizeof(uname) - 1);
-        } else if (strncmp(buffer, "exit", 16) == 0) {
+        } else if (strncmp(buffer, "exit", size) == 0) {
             break;
+        } else if (strncmp(buffer, "clear", size) == 0) {
+            syscall(2, tty0_devno, TTY_IOCTL_CLEAR, 0);
+        } else {
+            syscall(0, tty0_devno, (uint32_t) &bad_command, sizeof(bad_command) - 1);
         }
     }
 
     //exit()
-    syscall(3, 0, 0, 0);
+    syscall(4, 0, 0, 0);
 }
 
 void main() {
