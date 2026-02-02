@@ -1,15 +1,51 @@
-#pragma once
+#include <kernel/tilegpu.h>
+#include <kernel/majors.h>
 
-#include <stdint.h>
+//this is only if you choose to use a struct for the hardware interface
+struct tilegpu_hw_interface {
 
-#define TILEGPU_X           ((volatile uint8_t  *)0xFFFF)
-#define TILEGPU_Y           ((volatile uint8_t  *)0xFFFE)
-#define TILEGPU_ADDR        ((volatile uint16_t *)0xFFFC)
-#define TILEGPU_FX_OPCODE   ((volatile uint8_t  *)0xFFFB)
-#define TILEGPU_FX_IMM      ((volatile uint16_t *)0xFFFA)
-#define TILEGPU_DRAW        1
-#define TILEGPU_CLEAR       2
-#define TILEGPU_CONTROLS    ((volatile uint8_t  *)0xFFF9)
+};
+
+struct tilegpu_device gpu0;
+
+void tilegpu_init()
+{
+    //we must set the driver bindings to our functions
+    struct device_driver* tilegpu_driver = &driver_registry[TILEGPU_MAJOR];
+    tilegpu_driver->create = &tilegpu_create;
+    //etc...
+}
+
+struct device* tilegpu_create(int8_t* minor, const void* args)
+{
+
+}
+
+int tilegpu_destroy(uint8_t minor)
+{
+
+}
+
+struct device* tilegpu_lookup(uint8_t minor)
+{
+
+}
+
+int tilegpu_ioctl(struct device* dev, int cmd, void* arg)
+{
+
+}
+
+void tilegpu_update(struct device* dev)
+{
+
+}
+
+void tilegpu_global_update()
+{
+
+}
+
 
 // Draw a tile at the specified (x, y) coordinates with the given tile ID.
 // Coordinates are in pixel units.
