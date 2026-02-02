@@ -6,6 +6,8 @@
 #include <kernel/syscall.h>
 #include <lib/stdlib.h>
 
+#include <kernel/tilegpu.h>
+
 dev_t tty0_devno;
 struct device* tty0;
 dev_t disk0_devno;
@@ -24,6 +26,11 @@ void init_thread() {
 
     syscall(0, tty0_devno, (uint32_t) test1, strnlen(test1, 32));
     
+    // print out all ascii characters to tilegpu
+    for (uint8_t y = 0; y < 13; y++) {
+        tilegpu_puts(0, y, "Hello World!");
+    }
+
     init_thread_exit = 1;
     syscall(4, 0, 0, 0); //exit()
 }

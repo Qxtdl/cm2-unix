@@ -61,7 +61,7 @@ $(MN_FILE): $(OBJS)
 
 image: $(MN_FILE)
 	$(OBJCOPY) -O binary $(MN_FILE) image.bin
-	/bin/env python3 $(ROOT)/scripts/riscv_encoder.py image.bin
+	/bin/env python3 $(ROOT)/scripts/$(ARCH)_encoder.py image.bin
 
 size:
 	$(READELF) -S $(MN_FILE)

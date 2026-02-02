@@ -2,4 +2,4 @@ make clean
 make
 make image
 make dump
-./cm2-riscv-emulator image.bin disk_dump.bin
+./emulator/arch/riscv/cm2-riscv-emulator image.bin emulator/arch/riscv/emulator-tilesheet/minesweeper.bmp emulator/arch/riscv/disk_dump.bin
