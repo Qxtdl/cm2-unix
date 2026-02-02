@@ -1,17 +1,19 @@
 #include <kernel/syscall.h>
 #include <kernel/device.h>
+#include <kernel/panic.h>
 #include <stddef.h>
 
 uint32_t syscall_args[4]; //arguments registers, we only need a0 to a3 right now
 
-#define SYSCALL_COUNT 5
+#define SYSCALL_COUNT 6
 
 void (*syscall_setup_table[])() = {
     &dev_write,
     &dev_read,
     &dev_ioctl,
     &yield,
-    &exit
+    &exit,
+    &waitpid
 };
 
 void (*syscall_update_table[])(struct proc* process) = {
@@ -19,7 +21,8 @@ void (*syscall_update_table[])(struct proc* process) = {
     &dev_read_update,
     NULL,
     NULL,
-    NULL
+    NULL,
+    &waitpid_update
 };
 
 //syscall from user process
@@ -28,10 +31,10 @@ void (*syscall_update_table[])(struct proc* process) = {
 void dev_write()
 {
     struct proc* process = current_process;
-    process->dev_req = device_newreq((void*) syscall_args[2], syscall_args[3], 0, DEVICE_OP_WR);
+    process->dev_write_state.req = device_newreq((void*) syscall_args[2], syscall_args[3], 0, DEVICE_OP_WR);
     
     struct device* dev = device_lookup(syscall_args[1]);
-    device_queue_action(dev, process->dev_req);
+    device_queue_action(dev, process->dev_write_state.req);
     
     process->state = BLOCKED;
     process->syscall_state = SYSCALL_STATE_BEGIN;
@@ -39,10 +42,10 @@ void dev_write()
 
 void dev_write_update(struct proc* process)
 {
-    if (process->dev_req->state == DEVICE_STATE_FINISHED) {
+    if (process->dev_write_state.req->state == DEVICE_STATE_FINISHED) {
         process->state = READY;
-        process->return_value = process->dev_req->count;
-        device_free_req(process->dev_req);
+        process->return_value = process->dev_write_state.req->count;
+        device_free_req(process->dev_write_state.req);
         proc_enqueue(process); //allow the process to be executed again
         process->syscall_state = SYSCALL_STATE_NIL;
     }
@@ -52,10 +55,10 @@ void dev_write_update(struct proc* process)
 void dev_read()
 {
     struct proc* process = current_process;
-    process->dev_req = device_newreq((void*) syscall_args[2], syscall_args[3], 0, DEVICE_OP_RD);
+    process->dev_write_state.req = device_newreq((void*) syscall_args[2], syscall_args[3], 0, DEVICE_OP_RD);
     
     struct device* dev = device_lookup(syscall_args[1]);
-    device_queue_action(dev, process->dev_req);
+    device_queue_action(dev, process->dev_write_state.req);
     
     process->state = BLOCKED;
     process->syscall_state = SYSCALL_STATE_BEGIN;
@@ -63,10 +66,10 @@ void dev_read()
 
 void dev_read_update(struct proc* process)
 {
-    if (process->dev_req->state == DEVICE_STATE_FINISHED) {
+    if (process->dev_write_state.req->state == DEVICE_STATE_FINISHED) {
         process->state = READY;
-        process->return_value = process->dev_req->count;
-        device_free_req(process->dev_req);
+        process->return_value = process->dev_write_state.req->count;
+        device_free_req(process->dev_write_state.req);
         proc_enqueue(process); //allow the process to be executed again
         process->syscall_state = SYSCALL_STATE_NIL;
     }
@@ -83,16 +86,31 @@ void yield()
     //yield does nothing lol
 }
 
+//void exit(int return_code)
 void exit()
 {
-    current_process->state = BLOCKED;
-    proc_delete(current_process);
+    current_process->state = DEAD;
+    current_process->return_value = syscall_args[1];
 }
 
 //int waitpid(pid_t pid)
 void waitpid()
 {
-    
+    current_process->state = BLOCKED;
+    current_process->waitpid_state.target_pid = syscall_args[1];
+    current_process->syscall_state = SYSCALL_STATE_BEGIN;
+}
+
+void waitpid_update(struct proc* process)
+{
+    struct proc* target_proc = &process_table[process->waitpid_state.target_pid];
+
+    if (target_proc->state == DEAD) {
+        process->state = READY;
+        process->return_value = target_proc->return_value;
+        proc_enqueue(process);
+        process->syscall_state = SYSCALL_STATE_NIL;
+    }
 }
 
 void syscall_update()

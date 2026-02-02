@@ -10,6 +10,8 @@ void dev_read_update(struct proc* process);
 void dev_ioctl();
 void yield();
 void exit();
+void waitpid();
+void waitpid_update(struct proc* process);
 
 //called from a thread, switches to kernel context
 int syscall(uint32_t a, uint32_t b, uint32_t c, uint32_t d);
