@@ -20,7 +20,7 @@ struct proc {
     //this is for syscalls to remember how far they have progressed
     uint8_t syscall_state;
     uint8_t syscall_operation;
-    uint8_t pid; //maybe il find a use later
+    uint8_t pid;
     struct device_request* dev_req;
 };
 
