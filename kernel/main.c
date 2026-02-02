@@ -4,6 +4,7 @@
 #include <kernel/majors.h>
 #include <kernel/proc.h>
 #include <kernel/syscall.h>
+#include <lib/stdlib.h>
 
 dev_t tty0_devno;
 struct device* tty0;
@@ -11,29 +12,53 @@ dev_t disk0_devno;
 
 [[gnu::aligned(16)]] uint8_t init_thread_stack[64];
 
+int8_t init_thread_exit;
+
 void init_thread() {
-    char test[] = "CM2-UNIX V0.1.0\nBooting...\n";
+    char test[] = "CM2-UNIX V0.2.1\nBooting...\n";
     char test1[] = "registered disk0 at 0xFFC3\n";
+    init_thread_exit = 0;
     syscall(0, tty0_devno, (uint32_t) &test, sizeof(test) - 1);
     
     device_create(&disk0_devno, GEN_DISK_MAJOR, (void*) 0xFFC3);
 
     syscall(0, tty0_devno, (uint32_t) &test1, sizeof(test1) - 1);
     
-    while(1) {
-        syscall(1, 0, 0, 0); //yield();
-    }
+    init_thread_exit = 1;
+    syscall(3, 0, 0, 0); //exit()
 }
 
-[[gnu::aligned(16)]] uint8_t test_thread_stack[64];
+[[gnu::aligned(16)]] uint8_t test_thread_stack[128];
 
 void test_thread() {
-    char test[] = "Hello world!\n";
+    char test[] = "Shell v0.1.0\n";
+    char prompt[] = "# ";
+    char uname[] = "CM2-UNIX V0.2.1\n";
+    
+    //bodged pidwait
+    while(init_thread_exit == 0) {
+        syscall(2, 0, 0, 0); //yield()
+    };
+
     //dev_write(tty0_devno, &test, sizeof(test)-1);
     syscall(0, tty0_devno, (uint32_t) &test, sizeof(test) - 1);
+    
+    while(1) {
+        //write prompt
+        syscall(0, tty0_devno, (uint32_t) &prompt, sizeof(prompt) - 1);
+        //read input
+        char buffer[16] = {0};
+        syscall(1, tty0_devno, (uint32_t) &buffer, sizeof(buffer));
+
+        if (strncmp(buffer, "uname", 16) == 0) {
+            syscall(0, tty0_devno, (uint32_t) &uname, sizeof(uname) - 1);
+        } else if (strncmp(buffer, "exit", 16) == 0) {
+            break;
+        }
+    }
 
     //exit()
-    syscall(2, 0, 0, 0);
+    syscall(3, 0, 0, 0);
 }
 
 void main() {
