@@ -29,7 +29,7 @@ void init_thread() {
 }
 
 [[gnu::aligned(16)]] uint8_t test_thread_stack[128];
-char shell_name[] = "Shell v0.1.0\n";
+char shell_name[] = "Shell v0.1.1\n";
 char prompt[] = "# ";
 char uname[] = "CM2-UNIX V0.2.2\n";
 char bad_command[] = "-shell: bad cmd\n";
