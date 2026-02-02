@@ -1,0 +1,3 @@
+[submodule "emulator/riscv/cm2-riscv-emulator"]
+	path = emulator/riscv/cm2-riscv-emulator
+	url = https://github.com/imbluedabr/cm2-riscv-emulator.git
