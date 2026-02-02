@@ -15,14 +15,14 @@ dev_t disk0_devno;
 int8_t init_thread_exit;
 
 void init_thread() {
-    char test[] = "CM2-UNIX V0.2.2\nBooting...\n";
-    char test1[] = "registered disk0 at 0xFFC3\n";
+    const char *test = "CM2-UNIX V0.2.2\nBooting...\n";
+    const char *test1 = "registered disk0 at 0xFFC3\n";
     init_thread_exit = 0;
-    syscall(0, tty0_devno, (uint32_t) &test, sizeof(test) - 1);
+    syscall(0, tty0_devno, (uint32_t) test, strnlen(test, 32));
     
     device_create(&disk0_devno, GEN_DISK_MAJOR, (void*) 0xFFC3);
 
-    syscall(0, tty0_devno, (uint32_t) &test1, sizeof(test1) - 1);
+    syscall(0, tty0_devno, (uint32_t) test1, strnlen(test1, 32));
     
     init_thread_exit = 1;
     syscall(4, 0, 0, 0); //exit()
@@ -31,7 +31,7 @@ void init_thread() {
 [[gnu::aligned(16)]] uint8_t test_thread_stack[128];
 char shell_name[] = "Shell v0.1.1\n";
 char prompt[] = "# ";
-char uname[] = "CM2-UNIX V0.2.2\n";
+char uname[] = "CM2-UNIX V0.2.2\nbuild: " __DATE__ "\n";
 char bad_command[] = "-shell: bad cmd\n";
 
 void test_thread() {
