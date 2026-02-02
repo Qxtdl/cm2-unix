@@ -17,10 +17,12 @@ SECTIONS
   .rodata : {
     *(.rodata*)
     *(.srodata*)
+    . = ALIGN(16);
   } > ROM
 
   .data : {
-     *(.data*) 
+     *(.data*)
+     *(.sdata*)
   } > RAM
 
   .bss  : {
