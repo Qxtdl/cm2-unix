@@ -21,8 +21,6 @@
 ## Syscalls
 
 * add posix_spawn like syscall
-* add pidwait syscall
-* implement exit syscall with return code
 * add vfs syscalls
 * add pipe syscalls
 
