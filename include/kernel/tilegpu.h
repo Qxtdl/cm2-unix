@@ -25,12 +25,20 @@ struct tilegpu_hw_interface;
 
 struct tilegpu_device {
     struct device base;//inherit from device
-    volatile struct tilegpu_hw_interface* disk; //pointer to where the gpu is mapped, also optional if you want to use defines or tilegpu_hw_interface
+    volatile struct tilegpu_hw_interface* gpu; //pointer to where the gpu is mapped, also optional if you want to use defines or tilegpu_hw_interface
     struct device_request* current_req; //this is the current request the device is handeling
-    uint32_t bytes_copied; //this is the amount of bytes that were copied to or from the user buffer
+    uint32_t current_pixels_copied; //this is the amount of bytes that were copied to or from the user buffer
 };
 
+#define TILEGPU_IOCTL_CLEAR 0
+#define TILEGPU_IOCTL_DRAWTILE 1
 
+struct tilegpu_ioctl_msg_drawtile {
+    uint16_t tile_id;
+    uint8_t x;
+    uint8_t y;
+    uint8_t controls;
+};
 
 void tilegpu_init();
 
@@ -41,10 +49,3 @@ struct device* tilegpu_lookup(uint8_t minor); //lookup a gpu instance, once agai
 int tilegpu_ioctl(struct device* dev, int cmd, void* arg); //send a command to the gpu, e.g draw or fxdraw 
 void tilegpu_update(struct device* dev); //this gets called every tick, look at the current request, check if its a read or a write request, do a single operation e.g write a single character and do the bytes_copied++, this way you can write to the gpu without freezing the system
 void tilegpu_global_update(); //this calls the update of all registered devices, since there is only one you can directly call tilegpu_update
-
-
-void tilegpu_draw(uint8_t x, uint8_t y, uint16_t tile_id);
-void tilegpu_fxdraw(uint8_t x, uint8_t y, uint16_t tile_id, uint8_t fx_op, uint16_t fx_imm);
-void tilegpu_clearscreen(void);
-void tilegpu_puts(uint8_t x, uint8_t y, const char *str);
-void tilegpu_print(const char *str);
