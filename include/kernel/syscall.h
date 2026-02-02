@@ -23,3 +23,10 @@ void process_syscall();
 
 [[noreturn]] void exit_kernel();
 
+
+#define DEV_WRITE 0
+#define DEV_READ 1
+#define DEV_IOCTL 2
+#define YIELD 3
+#define EXIT 4
+#define WAITPID 5

@@ -5,7 +5,7 @@ TOOLCHAIN ?= riscv64-unknown-elf
 
 ROOT ?= $(PWD)
 
-RAYLIB ?= false
+RAYLIB ?= true
 EMULATOR ?= $(ROOT)/emulator/riscv/cm2-riscv-emulator
 
 #source files
@@ -67,7 +67,7 @@ image: $(MN_FILE)
 	/bin/env python3 $(ROOT)/scripts/$(ARCH)_encoder.py image.bin
 
 run: image.bin
-	$(MAKE) -C $(EMULATOR) run ROOT="$(EMULATOR)" OUTPUT_ARGS="$(ROOT)/image.bin $(EMULATOR)/emulator-tilesheet/minesweeper.bmp"
+	$(MAKE) -C $(EMULATOR) run ROOT="$(EMULATOR)" OUTPUT_ARGS="$(ROOT)/image.bin $(EMULATOR)/emulator-tilesheet/minesweeper.bmp $(EMULATOR)/disk_dump.bin"
 
 tools:
 	$(MAKE) -C $(EMULATOR) all ROOT="$(EMULATOR)" RAYLIB="$(RAYLIB)" OPTIMIZE=true
