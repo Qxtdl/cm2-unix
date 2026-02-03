@@ -1,34 +1,25 @@
 #pragma once
 #include <fs/fs.h>
 #include <kernel/device.h>
+#include <kernel/proc.h>
+
+#define MAX_FD 32
+extern struct fd fd_table[MAX_FD];
+
+int fd_alloc();
 
 //register a file system with a 4 letter name
 void register_filesystem(const char* name, struct super_ops* fs);
 
-
-
 typedef struct {
     char path_cpy[FS_PATH_LEN];
     char* path_ptr;
-    char* current_word;
-    struct superblock* fs;
-    struct inode* dir;
+    fs_lookup_t fs_state;
 } path_walk_t;
 
+void walk_path_init(path_walk_t* state, const char* path);
+uint8_t walk_path(path_walk_t* state);
 
-typedef struct {
-    path_walk_t walker;
-} vfs_open_t;
-
-
-
-
-
-
-
-
-//vfs api
-void vfs_open(const char* path, uint8_t flags);
 
 int vfs_read(int fd, void* buffer, uint32_t count);
 int vfs_write(int fd, const void* buffer, uint32_t count);
