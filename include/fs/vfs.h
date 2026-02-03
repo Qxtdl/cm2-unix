@@ -20,7 +20,6 @@ void walk_path_init(path_walk_t* state, const char* path);
 uint8_t walk_path(path_walk_t* state);
 
 
-int vfs_read(int fd, void* buffer, uint32_t count);
 int vfs_write(int fd, const void* buffer, uint32_t count);
 int vfs_lstat(int fd, struct stat* statbuff);
 int vfs_lseek(int fd, uint32_t offset, int whence);

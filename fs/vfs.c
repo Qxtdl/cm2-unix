@@ -62,8 +62,8 @@ uint8_t walk_path(path_walk_t* state)
         *state->path_ptr = '\0';
         stat = state->fs_state.fs->sops->lookup(&state->fs_state);
         
-        if (stat == 2) {
-            return 2; //directory not found
+        if (stat < 0) {
+            return stat; //directory not found
         } else if (stat == 1) {
             state->fs_state.fname = state->path_ptr + 1;
         }
