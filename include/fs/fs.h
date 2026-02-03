@@ -24,9 +24,16 @@ struct stat {
     dev_t dev;
 };
 
+typedef struct {
+    struct device_request* req;
+    struct superblock* fs;
+    struct inode* dir;
+    char* fname;
+} fs_lookup_t;
+
 //these operate on file systems
 struct super_ops {
-    struct inode* (*lookup)(struct superblock* fs, struct inode* dir, char* name); //lookup an inode in a dir
+    uint8_t (*lookup)(fs_lookup_t* state); //lookup an inode in a dir
     int (*release)(struct superblock* fs, struct inode* i); //this decrements the refcount and eventually free's the inode
     struct superblock* (*mount)(struct device* dev, char* args);
     int (*umount)(struct superblock* fs);
