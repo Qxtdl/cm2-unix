@@ -8,8 +8,10 @@ ROOT ?= $(PWD)
 RAYLIB ?= true
 EMULATOR ?= $(ROOT)/emulator/riscv/cm2-riscv-emulator
 
+FS_SELECT = $(ROOT)/fs/vfs.c
+
 #source files
-CSRCS = $(wildcard $(ROOT)/fs/*.c) \
+CSRCS = $(FS_SELECT) \
 	   $(wildcard $(ROOT)/kernel/*.c) \
 	   $(wildcard $(ROOT)/arch/$(ARCH)/*.c) \
 	   $(wildcard $(ROOT)/lib/*.c)

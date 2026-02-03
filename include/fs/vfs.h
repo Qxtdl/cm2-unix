@@ -1,7 +1,6 @@
 #pragma once
 #include <fs/fs.h>
 #include <kernel/device.h>
-#include <kernel/proc.h>
 
 #define MAX_FD 32
 extern struct fd fd_table[MAX_FD];
