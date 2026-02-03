@@ -8,7 +8,8 @@ ROOT ?= $(PWD)
 RAYLIB ?= true
 EMULATOR ?= $(ROOT)/emulator/riscv/cm2-riscv-emulator
 
-FS_SELECT = $(ROOT)/fs/vfs.c
+# the filesystems
+FS_SELECT = $(ROOT)/fs/vfs.c $(ROOT)/fs/romfs.c
 
 #source files
 CSRCS = $(FS_SELECT) \
