@@ -3,6 +3,14 @@
 
 extern uint32_t syscall_args[4];
 
+#define DEV_WRITE 0
+#define DEV_READ 1
+#define DEV_IOCTL 2
+#define YIELD 3
+#define EXIT 4
+#define WAITPID 5
+#define OPEN 6
+#define READ 7
 
 void dev_write();
 void dev_write_update(struct proc* process);
@@ -15,7 +23,8 @@ void waitpid();
 void waitpid_update(struct proc* process);
 void vfs_open();
 void vfs_open_update(struct proc* process);
-
+void vfs_read();
+void vfs_read_update(struct proc* process);
 
 
 
@@ -29,10 +38,3 @@ void process_syscall();
 
 [[noreturn]] void exit_kernel();
 
-
-#define DEV_WRITE 0
-#define DEV_READ 1
-#define DEV_IOCTL 2
-#define YIELD 3
-#define EXIT 4
-#define WAITPID 5

@@ -6,7 +6,7 @@
 
 uint32_t syscall_args[4]; //arguments registers, we only need a0 to a3 right now
 
-#define SYSCALL_COUNT 7
+#define SYSCALL_COUNT 8
 
 void (*syscall_setup_table[])() = {
     &dev_write,
@@ -15,7 +15,8 @@ void (*syscall_setup_table[])() = {
     &yield,
     &exit,
     &waitpid,
-    &vfs_open
+    &vfs_open,
+    &vfs_read
 };
 
 void (*syscall_update_table[])(struct proc* process) = {
@@ -25,7 +26,8 @@ void (*syscall_update_table[])(struct proc* process) = {
     NULL,
     NULL,
     &waitpid_update,
-    &vfs_open_update
+    &vfs_open_update,
+    &vfs_read_update
 };
 
 
@@ -117,12 +119,15 @@ void waitpid_update(struct proc* process)
     }
 }
 
+//hardcoded filesystem until i finish mount point resolution
+extern struct superblock* romfs;
 
+// int open(const char* path, uint8_t flags)
 void vfs_open()
 {
     struct proc* process = current_process;
     walk_path_init(&process->open_state.walker, (const char*) syscall_args[1]);
-    process->open_state.walker.fs_state.fs = NULL;
+    process->open_state.walker.fs_state.fs = romfs;
     
     //block the process
     process->state = BLOCKED;
@@ -135,7 +140,6 @@ void vfs_open_update(struct proc* process)
     if (rt == 2) { //directory not found
         proc_resume(process, -1);
     } else if (rt == 1) { //we walked the entire path
-        
         uint8_t new_fd = fd_alloc();
         struct fd* fd_p = &fd_table[new_fd];
         fd_p->file = process->open_state.walker.fs_state.dir;
@@ -143,14 +147,34 @@ void vfs_open_update(struct proc* process)
         fd_p->offset = 0;
         
         process->open_files[0] = new_fd;
-
         proc_resume(process, 0);
     }
 }
 
+//int write(int fd, void* buffer, uint32_t count)
+void vfs_read()
+{
+    struct proc* process = current_process;
+    //this is horrible lol, FIXME: add bounds checking
+    process->read_state.fs.descriptor = &fd_table[process->open_files[syscall_args[1]]];
+    process->read_state.fs.buffer = (void*) syscall_args[2];
+    process->read_state.fs.count = syscall_args[3];
+    process->read_state.fs.bytes_read = 0;
+    process->read_state.fs.fs = romfs;
+    process->read_state.fs.req = NULL;
 
+    process->state = BLOCKED;
+    process->syscall_state = SYSCALL_STATE_BEGIN;
+}
 
+void vfs_read_update(struct proc* process)
+{
+    int8_t rt = process->read_state.fs.fs->fops->read(&process->read_state.fs);
+    if (rt != 0) {
+        proc_resume(process, process->read_state.fs.bytes_read);
+    }
 
+}
 
 
 void syscall_update()
