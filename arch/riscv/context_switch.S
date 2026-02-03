@@ -44,6 +44,11 @@ syscall:
     call process_syscall
 
 exit_kernel:
+
+    #store kernel stack
+    la t0, kernel_sp
+    sw sp, 0(t0)
+
     la t0, current_process
     lw t0, 0(t0)
 
