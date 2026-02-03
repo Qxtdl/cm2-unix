@@ -25,9 +25,9 @@ struct tilegpu_hw_interface;
 
 struct tilegpu_device {
     struct device base;//inherit from device
-    volatile struct tilegpu_hw_interface* gpu; //pointer to where the gpu is mapped, also optional if you want to use defines or tilegpu_hw_interface
-    struct device_request* current_req; //this is the current request the device is handeling
-    uint32_t current_pixels_copied; //this is the amount of bytes that were copied to or from the user buffer
+    uint32_t iobase;
+    struct device_request* current_req;
+    uint32_t current_pixels_copied;
 };
 
 #define TILEGPU_IOCTL_CLEAR 0
