@@ -20,12 +20,18 @@
 #define TILEGPU_OR_COLOR    4
 #define TILEGPU_NOR_COLOR   5
 
-//optional, this is just using a struct for the hardware registers instead of defines
-struct tilegpu_hw_interface;
+struct tilegpu_hw_interface {
+    volatile uint8_t* controls;
+    volatile uint16_t* fx_imm;
+    volatile uint8_t* fx_opcode;
+    volatile uint16_t* tile_id;
+    volatile uint8_t* y;
+    volatile uint8_t* x;
+};
 
 struct tilegpu_device {
     struct device base;//inherit from device
-    uint32_t iobase;
+    struct tilegpu_hw_interface gpu_interface;
     struct device_request* current_req;
     uint32_t current_pixels_copied;
 };

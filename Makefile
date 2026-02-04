@@ -35,7 +35,7 @@ MN_FILE ?= main.elf
 
 DEBUG ?= false
 
-CFLAGS = -march=rv32i -mabi=ilp32 -ffreestanding -Wall -Wextra -Wno-unused-parameter $(INCL)
+CFLAGS = -march=rv32i -mabi=ilp32 -ffreestanding -Wall -Wextra -Wno-unused-parameter -g -fverbose-asm $(INCL)
 ASFLAGS = $(CFLAGS)
 LDFLAGS = -nostdlib -nostartfiles -static -march=rv32i -mabi=ilp32
 

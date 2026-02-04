@@ -84,7 +84,7 @@ void test_thread() {
         } else if (strncmp(buffer, "clear", size) == 0) {
             syscall(DEV_IOCTL, tty0_devno, TTY_IOCTL_CLEAR, 0);
         } else if (strncmp(buffer, "tilegpu", size) == 0) {
-            syscall(DEV_IOCTL, gpu0_devno, TILEGPU_IOCTL_DRAWTILE, (uint32_t) &tile);
+            syscall(DEV_WRITE, gpu0_devno, (uint32_t) "Hello", 5);
         } else {
             syscall(DEV_WRITE, tty0_devno, (uint32_t) &bad_command, sizeof(bad_command) - 1);
         }
@@ -105,7 +105,14 @@ void main() {
     proc_init();
 
     tty0 = device_create(&tty0_devno, TTY_MAJOR, (void*) 0xFFF1);
-    gpu0 = device_create(&gpu0_devno, TILEGPU_MAJOR, (void*) 0xFFF8);
+    gpu0 = device_create(&gpu0_devno, TILEGPU_MAJOR, &(struct tilegpu_hw_interface){
+        .controls = TILEGPU_CONTROLS,
+        .fx_imm = TILEGPU_FX_IMM,
+        .fx_opcode = TILEGPU_FX_OPCODE,
+        .tile_id = TILEGPU_ADDR,
+        .y = TILEGPU_Y,
+        .x = TILEGPU_X
+    });
 
     proc_create((uint32_t) &init_thread, (uint32_t) &init_thread_stack + 64);
     proc_create((uint32_t) &test_thread, (uint32_t) &test_thread_stack + 128);

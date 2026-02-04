@@ -1,20 +1,11 @@
 #include <stddef.h>
+#include <lib/stdlib.h>
 #include <kernel/device.h>
 #include <kernel/tilegpu.h>
 #include <kernel/majors.h>
 
 #include <kernel/tty.h>
 #include <lib/hex.h>
-
-struct __attribute__((packed)) tilegpu_hw_interface {
-    uint8_t padding;
-    uint8_t controls;   //FFF9
-    uint8_t fx_imm;     //FFFA
-    uint8_t fx_opcode;  //FFFB
-    uint16_t tile_id;    //FFFC
-    uint8_t y;          //FFFE
-    uint8_t x;          //FFFF
-};
 
 static struct tilegpu_device gpu0;
 
@@ -38,8 +29,10 @@ struct device* tilegpu_create(int8_t* minor, const void* args)
     struct tilegpu_device *gpu = &gpu0;
 
     if (gpu->base.ops == NULL) {
+        struct tilegpu_hw_interface* gpu_interface = (struct tilegpu_hw_interface*) args;
+
         gpu->base.ops = (struct device_ops *) &tilegpu_ops;
-        gpu->iobase = (uint32_t) args;
+        memcpy(&gpu->gpu_interface, gpu_interface, sizeof(struct tilegpu_hw_interface));
         gpu->base.count = 0;
         gpu->base.head = 0;
         gpu->base.tail = 0;
@@ -56,7 +49,7 @@ int tilegpu_destroy(uint8_t minor)
     //we only will deal with one gpu, so ignore minor.
     struct tilegpu_device *gpu = &gpu0;
     gpu->base.ops = NULL;
-    gpu->iobase = 0;
+    memset(&gpu->gpu_interface, sizeof(gpu->gpu_interface), 0);
     return 0;
 }
 
@@ -72,25 +65,21 @@ struct device* tilegpu_lookup(uint8_t minor)
 int tilegpu_ioctl(struct device* dev, int cmd, void* arg)
 {
     struct tilegpu_device* gpu = (struct tilegpu_device*) dev;
-    volatile struct tilegpu_hw_interface*  tilegpu_interface = (volatile struct tilegpu_hw_interface*) gpu->iobase;
-    
+    struct tilegpu_hw_interface* tilegpu_interface = &gpu->gpu_interface;
+
     int return_code = 0;
     if (gpu->base.ops == NULL) {
         return 0;
     }
 
     if (cmd == TILEGPU_IOCTL_CLEAR) {
-        tilegpu_interface->controls = TILEGPU_CLEAR;
+        *tilegpu_interface->controls = TILEGPU_CLEAR;
     } else if (cmd == TILEGPU_IOCTL_DRAWTILE) {
         struct tilegpu_ioctl_msg_drawtile* msg = (struct tilegpu_ioctl_msg_drawtile *) arg;
-        /*tilegpu_interface->x = msg->x;
-        tilegpu_interface->y = msg->y;
-        tilegpu_interface->controls = msg->controls;
-        tilegpu_interface->tile_id = msg->tile_id;*/
-        *TILEGPU_X = msg->x;
-        *TILEGPU_Y = msg->y;
-        *TILEGPU_ADDR = msg->tile_id;
-        *TILEGPU_CONTROLS = msg->controls;
+        *tilegpu_interface->x = msg->x;
+        *tilegpu_interface->y = msg->y;
+        *tilegpu_interface->controls = msg->controls;
+        *tilegpu_interface->tile_id = msg->tile_id;
     } else {
         return_code = -1;
     }
@@ -106,13 +95,15 @@ static inline uint8_t tilegpu_puts(
     uint32_t i = gpu->current_pixels_copied;
     char c = ((char*) current_req->buffer)[i];
 
-    if (c == '\n' || gpu_interface->x >= 48) { //the width is 48 pixels
-        gpu_interface->x = 0;
-        gpu_interface->y += 2;
-    } else {
-        gpu_interface->tile_id = c;
-        gpu_interface->x++;
-        gpu_interface->controls = TILEGPU_DRAW;
+    if (c == '\n' || *gpu_interface->x >= 48) {
+        *gpu_interface->x = 0;
+        *gpu_interface->y += 2;
+    } else {  
+        *gpu_interface->tile_id = c;
+        //(*gpu_interface->x)++;
+        // TODO: fix me
+        *gpu_interface->x = i;
+        *gpu_interface->controls = TILEGPU_DRAW;
     }
 
     gpu->current_pixels_copied = ++i;
@@ -126,7 +117,7 @@ static inline uint8_t tilegpu_puts(
 void tilegpu_update(struct device* dev)
 {
     struct tilegpu_device* gpu = (struct tilegpu_device*) dev;
-    volatile struct tilegpu_hw_interface* gpu_interface = (volatile struct tilegpu_hw_interface*) gpu->iobase;
+    struct tilegpu_hw_interface* gpu_interface = &gpu->gpu_interface;
     struct device_request* current_req = gpu->current_req;
 
     if (current_req == NULL) {
