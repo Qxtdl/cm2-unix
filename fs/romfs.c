@@ -44,11 +44,12 @@ int8_t romfs_lookup(fs_lookup_t* state)
             strncpy(new->name, (char*) curr->name, FS_INAME_LEN);
             new->refcount = 0;
             new->romfs.length = curr->length;
+            new->romfs.data = curr->data;
             state->dir = new;
             return 1;
         }
     }
-
+    
     return -1; //file not found
 }
 
@@ -60,16 +61,18 @@ struct superblock* romfs_mount(struct device* dev, const char* args)
 
 int8_t romfs_read(fs_read_t* state)
 {
-    struct romfs_inode* file = (struct romfs_inode*) state->descriptor->file;
+    
+    struct inode* file = state->descriptor->file;
     uint32_t i = state->bytes_read;
 
-    uint8_t byte = ((uint8_t*)file->data)[i];
-
+    uint8_t byte = ((uint8_t*)file->romfs.data)[i];
+    debug('F');
     ((uint8_t*) state->buffer)[i] = byte;
     state->bytes_read = ++i;
 
 
-    if (i == state->count || i == file->length) {
+    if (i == state->count || i == file->romfs.length) {
+        debug('Y');
         return 1;
     }
     return 0;
