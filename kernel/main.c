@@ -24,29 +24,22 @@ struct superblock* romfs;
 
 
 void init_thread() {
-    const char *test = "CM2-UNIX V0.2.3\nBooting...\n";
-    const char *test1 = "registered disk0 at 0xFFC3\n";
-
-
-
+    const char *test = "CM2-UNIX V0.2.3\nBooting...\n"; 
     
     //const char *tilegpu_print = "tilegpu\ntest";
     //syscall(DEV_WRITE, gpu0_devno, (uint32_t) tilegpu_print, strnlen(tilegpu_print, 32));
 
     syscall(DEV_WRITE, tty0_devno, (uint32_t) test, strnlen(test, 32));
     
-    device_create(&disk0_devno, GEN_DISK_MAJOR, (void*) 0xFFC3);
-
-    syscall(DEV_WRITE, tty0_devno, (uint32_t) test1, strnlen(test1, 32));
-
-    romfs = romfs_sops.mount(NULL, NULL);
-
-    int fd = syscall(OPEN, (uint32_t) "yeet", 0, 0);
+    /* test the open and read syscalls
+    int fd = syscall(OPEN, (uint32_t) "yeet.txt", 0, 0);
+    debug('D');
     char buff[16];
     
     syscall(READ, fd, (uint32_t) &buff, 16);
 
     syscall(DEV_WRITE, tty0_devno, (uint32_t) &buff, 16);
+    */
 
     syscall(EXIT, 0, 0, 0); //exit(0)
 }
@@ -103,6 +96,7 @@ void main() {
     tilegpu_init();
     gen_disk_init();
     proc_init();
+    fs_init();
 
     tty0 = device_create(&tty0_devno, TTY_MAJOR, (void*) 0xFFF1);
     gpu0 = device_create(&gpu0_devno, TILEGPU_MAJOR, &(struct tilegpu_hw_interface){
@@ -113,6 +107,11 @@ void main() {
         .y = TILEGPU_Y,
         .x = TILEGPU_X
     });
+    device_create(&disk0_devno, GEN_DISK_MAJOR, (void*) 0xFFC3);
+
+
+    register_filesystem("romfs", (struct super_ops*) &romfs_sops);
+    mount_root("romfs", 255);
 
     proc_create((uint32_t) &init_thread, (uint32_t) &init_thread_stack + 128);
     proc_create((uint32_t) &test_thread, (uint32_t) &test_thread_stack + 128);
