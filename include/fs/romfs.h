@@ -1,17 +1,19 @@
 #pragma once
 #include <fs/fs.h>
 
-struct romfs_inode {
-    struct inode base;
-    void* data;
-    uint32_t length;
-};
 
 #define ROMFS_MAX_FILES 16
 
+struct romfs_file {
+    const char* name;
+    uint16_t length;
+    uint8_t mode;
+    void* data;
+};
+
 struct romfs_superblock {
     struct superblock base;
-    struct romfs_inode file_table[ROMFS_MAX_FILES];
+    struct romfs_file file_table[ROMFS_MAX_FILES];
 };
 
 extern const struct super_ops romfs_sops;
