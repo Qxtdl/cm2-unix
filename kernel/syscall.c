@@ -30,7 +30,6 @@ void (*syscall_update_table[])(struct proc* process) = {
 
 #define SYSCALL_COUNT sizeof(syscall_setup_table)/sizeof(void*)
 
-
 //syscall from user process
 
 //int dev_write(dev_t devno, void* buffer, uint32_t count)
@@ -127,7 +126,7 @@ void vfs_open()
 {
     struct proc* process = current_process;
     walk_path_init(&process->open_state.walker, (const char*) syscall_args[1]);
-    debug('A');
+    
     //block the process
     process->state = BLOCKED;
     process->syscall_state = SYSCALL_STATE_BEGIN;
@@ -145,19 +144,26 @@ void vfs_open_update(struct proc* process)
         fd_p->flags = 0;
         fd_p->offset = 0;
         
-        process->open_files[0] = new_fd;
+        uint8_t fdnum = proc_alloc_fd();
+        if (fdnum == PROC_FILE_NIL) {
+            proc_resume(process, -1);
+            return;
+        }
+        process->open_files[fdnum] = new_fd;
         proc_resume(process, 0);
     }
 }
 
-#include <kernel/tty.h>
-#include <lib/hex.h>
+//BUG: there is a stack corruption bug in here, specifically when reading from romfs
 //int write(int fd, void* buffer, uint32_t count)
 void vfs_read()
 {
     struct proc* process = current_process;
-    //this is horrible lol, FIXME: add bounds checking
-    struct fd* descriptor = &fd_table[process->open_files[syscall_args[1]]];
+    struct fd* descriptor = proc_get_fd(syscall_args[1]);
+    if (descriptor == NULL) {
+        process->return_value = -1;
+        return;
+    }
     process->read_state.fs.descriptor = descriptor;
     process->read_state.fs.buffer = (void*) syscall_args[2];
     process->read_state.fs.count = syscall_args[3];
