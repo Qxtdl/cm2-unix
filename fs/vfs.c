@@ -2,42 +2,7 @@
 #include <stddef.h>
 #include <lib/stdlib.h>
 
-//this is just a private type
-#define FS_NAME_LEN 4
-struct fs_tuple {
-    struct super_ops* fs;
-    char name[FS_NAME_LEN];
-};
-
-//this maps names to fileystem types
-#define MAX_FILESYSTEM_COUNT 4
-struct fs_tuple filesystem_registry[MAX_FILESYSTEM_COUNT];
-
-#define MAX_FD 32
-struct fd fd_table[MAX_FD];
-
-void register_filesystem(const char* name, struct super_ops* fs)
-{
-    for (int i = 0; i < MAX_FILESYSTEM_COUNT; i++) {
-        if (filesystem_registry[i].fs == NULL) {
-            filesystem_registry[i].fs = fs;
-            strncpy(filesystem_registry[i].name, (char*) name, FS_NAME_LEN);
-            break;
-        }
-    }
-}
-
-
-//maybe there is a faster way of allocating these?
-int fd_alloc()
-{
-    for (int i = 0; i < MAX_FD; i++) {
-        if (fd_table[i].file == NULL) {
-            return i;
-        }
-    }
-    return -1;
-}
+struct superblock* rootfs;
 
 void walk_path_init(path_walk_t* state, const char* path)
 {
@@ -45,12 +10,15 @@ void walk_path_init(path_walk_t* state, const char* path)
     state->fs_state.fname = state->path_cpy;
     state->path_ptr = state->path_cpy;
     state->fs_state.dir = NULL;
+    state->fs_state.fs = rootfs; //we start th search at the root
+    debug('B');
 }
 
-uint8_t walk_path(path_walk_t* state)
+
+int8_t walk_path(path_walk_t* state)
 {
     if (*state->path_ptr == '\0') {
-        uint8_t stat = state->fs_state.fs->sops->lookup(&state->fs_state);
+        uint8_t stat = lookup_dir(&state->fs_state);
         if (stat != 0) {
             return stat;
         }
@@ -60,8 +28,7 @@ uint8_t walk_path(path_walk_t* state)
     
     if (*state->path_ptr == '/') {
         *state->path_ptr = '\0';
-        stat = state->fs_state.fs->sops->lookup(&state->fs_state);
-        
+        stat = lookup_dir(&state->fs_state);
         if (stat < 0) {
             return stat; //directory not found
         } else if (stat == 1) {
@@ -77,7 +44,16 @@ uint8_t walk_path(path_walk_t* state)
 }
 
 
-
-
+int mount_root(const char* fs_name, dev_t devno)
+{
+    struct super_ops* fs = lookup_filesystem(fs_name);
+    if (fs == NULL) {
+        return -1;
+    }
+    struct device* dev = device_lookup(devno);
+    
+    rootfs = fs->mount(dev, NULL);
+    return 0;
+}
 
 
