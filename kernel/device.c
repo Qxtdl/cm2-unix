@@ -73,6 +73,9 @@ struct device* device_lookup(dev_t devno)
 {
     uint8_t major = MAJOR(devno);
     uint8_t minor = MINOR(devno);
+    if (major >= DEVICE_DRIVER_MAX) {
+        return NULL;
+    }
     struct device_driver* driver = &driver_registry[major];
     if (driver->lookup == NULL) {
         return NULL;

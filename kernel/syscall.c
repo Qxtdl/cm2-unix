@@ -127,8 +127,7 @@ void vfs_open()
 {
     struct proc* process = current_process;
     walk_path_init(&process->open_state.walker, (const char*) syscall_args[1]);
-    process->open_state.walker.fs_state.fs = romfs;
-    
+    debug('A');
     //block the process
     process->state = BLOCKED;
     process->syscall_state = SYSCALL_STATE_BEGIN;
@@ -156,11 +155,12 @@ void vfs_read()
 {
     struct proc* process = current_process;
     //this is horrible lol, FIXME: add bounds checking
-    process->read_state.fs.descriptor = &fd_table[process->open_files[syscall_args[1]]];
+    struct fd* descriptor = &fd_table[process->open_files[syscall_args[1]]];
+    process->read_state.fs.descriptor = descriptor;
     process->read_state.fs.buffer = (void*) syscall_args[2];
     process->read_state.fs.count = syscall_args[3];
     process->read_state.fs.bytes_read = 0;
-    process->read_state.fs.fs = romfs;
+    process->read_state.fs.fs = descriptor->file->fs;
     process->read_state.fs.req = NULL;
 
     process->state = BLOCKED;
@@ -185,7 +185,7 @@ void syscall_update()
     
     while(current < end) {
 
-        if (current->syscall_state != SYSCALL_STATE_NIL) {
+        if (current->syscall_state != SYSCALL_STATE_NIL && current->state != UNALLOCATED) {
             syscall_update_table[current->syscall_operation](current);
         }
 
