@@ -19,5 +19,5 @@ void __stack_chk_fail(void) {
     *((uint8_t *)0xFFF8) = 2;    // POST = FAIL
     *((uint8_t *)0xFFF7) = 0xFF; // FCAUSE = STACK CORRUPTED
 
-    panic();
+    panic("__stack_chk_fail");
 }

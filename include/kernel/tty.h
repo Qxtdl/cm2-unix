@@ -29,6 +29,3 @@ void tty_global_update();
 int tty_ioctl(struct device* dev, int cmd, void* arg);
 
 void tty_update(struct device* dev);
-
-void freestanding_tty_puts(const char *s);
-
