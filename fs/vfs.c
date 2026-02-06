@@ -6,12 +6,12 @@ struct superblock* rootfs;
 
 void walk_path_init(path_walk_t* state, const char* path)
 {
+    memset(state->path_cpy, 0, FS_PATH_LEN);
     strncpy(state->path_cpy, (char*) path, FS_PATH_LEN);
     state->fs_state.fname = state->path_cpy;
     state->path_ptr = state->path_cpy;
     state->fs_state.dir = NULL;
     state->fs_state.fs = rootfs; //we start th search at the root
-    debug('B');
 }
 
 
@@ -23,9 +23,8 @@ int8_t walk_path(path_walk_t* state)
             return stat;
         }
     }
-    debug('C');
     
-    uint8_t stat = 1;
+    int8_t stat = 1;
     
     if (*state->path_ptr == '/') {
         *state->path_ptr = '\0';

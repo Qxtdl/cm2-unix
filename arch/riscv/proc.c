@@ -57,6 +57,7 @@ void proc_init()
     for (int i = 0; i < MAX_PROCESSES; i++) {
         free_processes[i] = i;
         process_table[i].state = UNALLOCATED;
+        memset(&process_table[i].open_files, PROC_FILE_NIL, PROC_MAXFILES);
     }
 }
 
