@@ -31,15 +31,17 @@ void init_thread() {
 
     syscall(DEV_WRITE, tty0_devno, (uint32_t) test, strnlen(test, 32));
     
-    /* test the open and read syscalls
+    // test the open and read syscalls
     int fd = syscall(OPEN, (uint32_t) "yeet.txt", 0, 0);
-    debug('D');
+    if (fd == -1) {
+        syscall(DEV_WRITE, tty0_devno, (uint32_t) "\nerror\n", 7);
+    }
     char buff[16];
     
     syscall(READ, fd, (uint32_t) &buff, 16);
 
     syscall(DEV_WRITE, tty0_devno, (uint32_t) &buff, 16);
-    */
+    
 
     syscall(EXIT, 0, 0, 0); //exit(0)
 }

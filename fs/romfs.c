@@ -58,15 +58,13 @@ struct superblock* romfs_mount(struct device* dev, const char* args)
     return &romfs.base;
 }
 
-
-int8_t romfs_read(fs_read_t* state)
+__attribute__((optimize("O2"))) int8_t romfs_read(fs_read_t* state)
 {
     
     struct inode* file = state->descriptor->file;
     uint32_t i = state->bytes_read;
 
     uint8_t byte = ((uint8_t*)file->romfs.data)[i];
-    debug('F');
     ((uint8_t*) state->buffer)[i] = byte;
     state->bytes_read = ++i;
 

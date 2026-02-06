@@ -145,7 +145,7 @@ void vfs_open_update(struct proc* process)
         fd_p->offset = 0;
         
         uint8_t fdnum = proc_alloc_fd();
-        if (fdnum == PROC_FILE_NIL) {
+        if (fdnum == PROC_FILE_NIL) { 
             proc_resume(process, -1);
             return;
         }
