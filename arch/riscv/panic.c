@@ -2,24 +2,22 @@
 #include <lib/hex.h>
 #include <kernel/tty.h>
 #include <kernel/proc.h>
+#include <lib/kprint.h>
 
 #include <stdint.h>
 
-void panic(void) {
+void panic(const char *s) {
     uint32_t sp;
     __asm__ volatile (
         "mv %0, sp"
         : "=r" (sp)
     );
     
-    freestanding_tty_puts("KERNEL PANIC:\nSP $");
-    freestanding_tty_puts(u32_to_hex(sp));
-    freestanding_tty_puts("\nPID: $");
-    freestanding_tty_puts(u32_to_hex(current_process->pid));
-    freestanding_tty_puts("\nSYSCALL: $");
-    freestanding_tty_puts(u32_to_hex(current_process->syscall_operation));
-    freestanding_tty_puts("\nRA: $");
-    freestanding_tty_puts(u32_to_hex(current_process->return_address));
+    kprintf("KERNEL PANIC: \n%s\n", s ? s : "No reasson provided.");
+    kprintf("SP: %x\n", sp);
+    kprintf("PID: %x\n", current_process->pid);
+    kprintf("SYSCALL: %x\n", current_process->syscall_operation);
+    kprintf("RA: %x\n", current_process->return_address);
     
     while (1);
 }
