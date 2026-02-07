@@ -24,7 +24,7 @@ struct superblock* romfs;
 
 
 void init_thread() {
-    const char *test = "CM2-UNIX V0.2.3\nBooting...\n"; 
+    const char *test = "CM2-UNIX V0.3.0\nBooting...\n"; 
     
     //const char *tilegpu_print = "tilegpu\ntest";
     //syscall(DEV_WRITE, gpu0_devno, (uint32_t) tilegpu_print, strnlen(tilegpu_print, 32));
@@ -36,9 +36,9 @@ void init_thread() {
 }
 
 [[gnu::aligned(16)]] uint8_t test_thread_stack[128];
-const char shell_name[] = "Shell v0.1.1\n";
+const char shell_name[] = "Shell v0.1.2\n";
 const char prompt[] = "# ";
-const char uname[] = "CM2-UNIX V0.2.3\nbuild: " __DATE__ "\n";
+const char uname[] = "CM2-UNIX V0.3.0\nbuild: " __DATE__ "\n";
 const char bad_command[] = "-shell: bad cmd\n";
 const char ls_ftypes[] = " dfm";
 
