@@ -7,7 +7,7 @@ struct superblock;
 struct fd;
 struct dentry;
 
-typedef uint32_t inum_t; //this is a unique identifier for an inode, this would be like the cluster + offset in fat
+typedef uint32_t ino_t; //this is a unique identifier for an inode, this would be like the cluster + offset in fat
 
 #define FS_INAME_LEN 10
 #define FS_PATH_LEN (FS_INAME_LEN*4)
@@ -28,8 +28,8 @@ struct inode {
     char name[FS_INAME_LEN]; //the name of the file
     uint8_t refcount; //the amount of references exist to this inode, this includes file descriptors and dentries
     uint8_t mode; //currently only stores filetype, but i will later expand it will actual permissions and ownership
-    inum_t dir; //the parent directory of this inode
-    inum_t file; //the inum of this inode
+    ino_t dir; //the parent directory of this inode
+    ino_t file; //the inum of this inode
     union {
         struct romfs_inode romfs;
     };
@@ -40,6 +40,8 @@ struct stat {
     uint32_t time;
     uint8_t mode;
     dev_t dev;
+    ino_t d_ino;
+    char name[FS_INAME_LEN];
 };
 
 typedef struct {
@@ -58,27 +60,63 @@ typedef struct {
     void* buffer;
 } fs_read_t;
 
+typedef struct {
+    struct device_driver* req;
+    struct superblock* fs;
+    struct fd* descriptor;
+    uint32_t bytes_written;
+    uint32_t count;
+    void* buffer;
+} fs_write_t;
+
+typedef struct {
+    struct device_driver* req;
+    struct superblock* fs;
+    struct fd* descriptor;
+    uint32_t bytes_read;
+    uint32_t count;
+    void* buffer;
+    uint32_t offset;
+} fs_pread_t;
+
+typedef struct {
+    struct device_driver* req;
+    struct superblock* fs;
+    struct fd* descriptor;
+    uint32_t bytes_written;
+    uint32_t count;
+    void* buffer;
+    uint32_t offset;
+} fs_pwrite_t;
+
+
+typedef struct {
+    struct device_request* req;
+    struct inode* dir;
+    char* name;
+} fs_dirop_t;
+
+//TODO: the current api is not very good but i can chage it later
 //these operate on file systems
 struct super_ops {
     int8_t (*lookup)(fs_lookup_t* state); //lookup an inode in a dir
-    int (*release)(struct superblock* fs, struct inode* i); //this decrements the refcount and eventually free's the inode
     struct superblock* (*mount)(struct device* dev, const char* args);
     int (*umount)(struct superblock* fs);
-    int (*mkdir)(struct superblock* fs, struct inode* dir, char* name);
-    int (*rmdir)(struct superblock* fs, struct inode* dir, char* name);
-    int (*unlink)(struct superblock* fs, struct inode* dir, char* name);
+    int (*mkdir)(fs_dirop_t* state);
+    int (*rmdir)(fs_dirop_t* state);
+    int (*unlink)(fs_dirop_t* state);
 };
 
 //these operate on file descriptors
 struct file_ops {
     int8_t (*read)(fs_read_t* state);
     int8_t (*write)(fs_read_t* state);
-    int (*lstat)(struct superblock* fs, struct fd* f, struct stat* statbuff);
+    int (*lstat)(struct superblock* fs, struct fd* f, struct stat* statbuff); //these are instant (i hope)
     int (*lseek)(struct superblock* fs, struct fd* f, uint32_t offset, int whence);
     void (*close)(struct superblock* fs, struct fd* f);
-    int (*readdir)(struct superblock* fs, struct fd* f, void* buffer, uint32_t count);
-    int (*pread)(struct superblock* fs, struct fd* f, void* buffer, uint32_t count, uint32_t offset);
-    int (*pwrite)(struct super_ops* fs, struct fd* f, void* biffer, uint32_t count, uint32_t offset);
+    int8_t (*readdir)(fs_read_t* state);
+    int8_t (*pread)(fs_pread_t* state);
+    int8_t (*pwrite)(fs_pwrite_t* state);
 };
 
 struct superblock {
@@ -105,7 +143,7 @@ extern struct fd fd_table[MAX_FD];
 
 
 void fs_init();
-struct inode* create_inode();
+struct inode* create_inode(const char* name);
 void free_inode(struct inode* i);
 int8_t lookup_dir(fs_lookup_t* state);
 void register_filesystem(const char* name, struct super_ops* fs);

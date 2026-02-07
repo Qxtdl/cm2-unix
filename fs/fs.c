@@ -1,7 +1,6 @@
 #include <fs/fs.h>
 #include <lib/stdlib.h>
 
-
 struct inode inode_table[INODE_TABLE_SIZE];
 
 uint8_t free_list[INODE_TABLE_SIZE];
@@ -33,14 +32,17 @@ void fs_init()
     }
 }
 
-struct inode* create_inode()
+struct inode* create_inode(const char* name)
 {
     uint8_t tmp = free_list_size;
     if (tmp == 0) {
         return NULL;
     }
     free_list_size = --tmp;
-    return &inode_table[tmp];
+    struct inode* new = &inode_table[tmp];
+    new->refcount = 1;
+    strncpy(new->name, (char*) name, FS_INAME_LEN);
+    return new;
 }
 
 void free_inode(struct inode* i)
@@ -57,8 +59,13 @@ void free_inode(struct inode* i)
 //TODO: improve inode lookup speed
 int8_t lookup_dir(fs_lookup_t* state)
 {
+    if (state->dir->mode == FS_MODE_MOUNT) {
+        state->fs = state->dir->fs;
+    }
+
     struct inode* current = &inode_table[0];
     struct inode* end = inode_table + INODE_TABLE_SIZE;
+    
     while (current < end) {
 
         //check if the file is in the right dir
