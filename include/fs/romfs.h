@@ -2,7 +2,7 @@
 #include <fs/fs.h>
 
 
-#define ROMFS_MAX_FILES 16
+#define ROMFS_DIR_SIZE 16
 
 struct romfs_file {
     const char* name;
@@ -13,7 +13,7 @@ struct romfs_file {
 
 struct romfs_superblock {
     struct superblock base;
-    struct romfs_file file_table[ROMFS_MAX_FILES];
+    struct romfs_file* root;
 };
 
 extern const struct super_ops romfs_sops;
@@ -23,5 +23,6 @@ int8_t romfs_lookup(fs_lookup_t* state);
 struct superblock* romfs_mount(struct device* dev, const char* args);
 
 int8_t romfs_read(fs_read_t* state);
+int8_t romfs_readdir(fs_read_t* state);
 
 
