@@ -59,10 +59,15 @@ void free_inode(struct inode* i)
 //TODO: improve inode lookup speed
 int8_t lookup_dir(fs_lookup_t* state)
 {
+    
+    if (FS_IS_A_FILE(state->dir->mode)) {
+        return -1; //its not a dir
+    }
+
     if (state->dir->mode == FS_MODE_MOUNT) {
         state->fs = state->dir->fs;
     }
-
+    
     struct inode* current = &inode_table[0];
     struct inode* end = inode_table + INODE_TABLE_SIZE;
     
@@ -78,7 +83,7 @@ int8_t lookup_dir(fs_lookup_t* state)
 
         current++;
     }
-
+    
     int8_t stat = state->fs->sops->lookup(state);
     return stat;
 }

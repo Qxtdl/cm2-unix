@@ -11,9 +11,13 @@ typedef uint32_t ino_t; //this is a unique identifier for an inode, this would b
 
 #define FS_INAME_LEN 10
 #define FS_PATH_LEN (FS_INAME_LEN*4)
-#define FS_MODE_DIR 1
+#define FS_MODE_DIR 0
 #define FS_MODE_FILE 2
-#define FS_MODE_MOUNT 3
+#define FS_MODE_MOUNT 1
+#define FS_MODE_DEV 3
+#define FS_IS_A_FILE(MODE) (MODE & 0b10)
+
+#define FS_GET_INO_OFF(ID) (ID << 16)
 
 #define INODE_TABLE_SIZE 32
 
@@ -22,6 +26,9 @@ struct romfs_inode {
     uint32_t length;
 };
 
+struct devfs_inode {
+    dev_t devno;
+};
 
 struct inode {
     struct superblock* fs; //this is the filesystem that the inode is part of
@@ -32,6 +39,7 @@ struct inode {
     ino_t file; //the inum of this inode
     union {
         struct romfs_inode romfs;
+        struct devfs_inode devfs;
     };
 };
 
@@ -52,7 +60,7 @@ typedef struct {
 } fs_lookup_t;
 
 typedef struct {
-    struct device_driver* req;
+    struct device_request* req;
     struct superblock* fs;
     struct fd* descriptor;
     uint32_t bytes_read;
@@ -61,7 +69,7 @@ typedef struct {
 } fs_read_t;
 
 typedef struct {
-    struct device_driver* req;
+    struct device_request* req;
     struct superblock* fs;
     struct fd* descriptor;
     uint32_t bytes_written;
@@ -70,7 +78,7 @@ typedef struct {
 } fs_write_t;
 
 typedef struct {
-    struct device_driver* req;
+    struct device_request* req;
     struct superblock* fs;
     struct fd* descriptor;
     uint32_t bytes_read;
@@ -80,7 +88,7 @@ typedef struct {
 } fs_pread_t;
 
 typedef struct {
-    struct device_driver* req;
+    struct device_request* req;
     struct superblock* fs;
     struct fd* descriptor;
     uint32_t bytes_written;
@@ -100,7 +108,7 @@ typedef struct {
 //these operate on file systems
 struct super_ops {
     int8_t (*lookup)(fs_lookup_t* state); //lookup an inode in a dir
-    struct superblock* (*mount)(struct device* dev, const char* args);
+    int (*mount)(struct inode* mountpoint, struct device* dev, const char* args);
     int (*umount)(struct superblock* fs);
     int (*mkdir)(fs_dirop_t* state);
     int (*rmdir)(fs_dirop_t* state);
@@ -110,10 +118,9 @@ struct super_ops {
 //these operate on file descriptors
 struct file_ops {
     int8_t (*read)(fs_read_t* state);
-    int8_t (*write)(fs_read_t* state);
+    int8_t (*write)(fs_write_t* state);
     int (*lstat)(struct superblock* fs, struct fd* f, struct stat* statbuff); //these are instant (i hope)
     int (*lseek)(struct superblock* fs, struct fd* f, uint32_t offset, int whence);
-    void (*close)(struct superblock* fs, struct fd* f);
     int8_t (*readdir)(fs_read_t* state);
     int8_t (*pread)(fs_pread_t* state);
     int8_t (*pwrite)(fs_pwrite_t* state);
