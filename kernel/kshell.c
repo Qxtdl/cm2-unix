@@ -8,6 +8,7 @@
 #include <uapi/dev.h>
 #include <uapi/majors.h>
 #include <uapi/syscalls.h>
+#include <uapi/proc.h>
 
 #include <uapi/tty.h>
 #include <uapi/tilegpu.h>
@@ -75,6 +76,11 @@ void exit(int exit_code)
     syscall(SYS_EXIT, exit_code, 0, 0);
 }
 
+pid_t exec(const char* path)
+{
+    return syscall(SYS_EXEC, (uint32_t) path, 0, 0);
+}
+
 int sysctl(int cmd, void* buff, int count)
 {
     return syscall(SYS_SYSCTL, cmd, (uint32_t) buff, count);
@@ -123,7 +129,7 @@ void kshell_thread()
 {
     tty0 = open("/dev/tty0", 0);
     char input[LINE_SIZE];
-    
+
     while(1) {
         int errno = 0;
         memset(input, 0, LINE_SIZE);
