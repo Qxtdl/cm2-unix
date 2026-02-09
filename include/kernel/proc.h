@@ -1,14 +1,9 @@
 #pragma once
 #include <stdint.h>
+#include <uapi/proc.h>
 #include <kernel/device.h>
 #include <fs/vfs.h>
 
-enum proc_state : uint8_t {
-    BLOCKED,
-    READY,
-    DEAD,
-    UNALLOCATED
-};
 
 typedef struct {
     struct device_request* req;
@@ -31,8 +26,9 @@ typedef struct {
 } vfs_write_t;
 
 typedef struct {
-	path_walker_t walker;
+	path_walk_t walker;
 	fs_read_t fs;
+    struct fd descriptor;
 } exe_t;
 
 #define SYSCALL_STATE_NIL 255
@@ -65,11 +61,10 @@ struct proc {
         vfs_open_t open_state;
         vfs_read_t read_state;
         vfs_write_t write_state;
-        exec_t exec_state;
+        exe_t exec_state;
     };
 };
 
-typedef uint8_t pid_t;
 #define MAX_PROCESSES 4
 #define MAX_PROCESSES_MSK (MAX_PROCESSES - 1)
 extern struct proc process_table[MAX_PROCESSES];
