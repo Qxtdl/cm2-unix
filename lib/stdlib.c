@@ -1,5 +1,14 @@
 #include <lib/stdlib.h>
 
+uint32_t strlen(const char* str)
+{
+    int size = 0;
+    while (*str++ != '\0') {
+        size++;
+    }
+    return size;
+}
+
 uint32_t strnlen(const char* str, uint32_t max_size)
 {
     int size = 0;
@@ -31,11 +40,22 @@ int strncmp( const char * s1, const char * s2, uint32_t n )
     }
 }
 
-void strncpy(char* dest, char* src, uint32_t size)
+int strncpy(char* dest, char* src, uint32_t size)
+{
+    int i = 0;
+    while((*src != '\0') && (size-- > 0)) {
+        *(dest++) = *(src++);
+        i++;
+    }
+    return i;
+}
+
+void strlcpy(char* dest, char* src, uint32_t size)
 {
     while((*src != '\0') && (size-- > 0)) {
         *(dest++) = *(src++);
     }
+    *dest = '\0';
 }
 
 
