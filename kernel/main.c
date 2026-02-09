@@ -26,7 +26,7 @@ void main() {
     proc_init();
     fs_init();
 
-    kputs("CM2-UNIX v0.3.2\nBooting...\n");
+    kputs("CM2-UNIX v0.3.4\nBooting...\n");
     
     device_create(&tty0_devno, TTY_MAJOR, (void*) 0xFFF1);
     device_create(&gpu0_devno, TILEGPU_MAJOR, &(struct tilegpu_hw_interface){
