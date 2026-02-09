@@ -2,7 +2,7 @@
 #include <lib/stdlib.h>
 #include <kernel/device.h>
 #include <kernel/tilegpu.h>
-#include <kernel/majors.h>
+#include <uapi/majors.h>
 
 #include <kernel/tty.h>
 #include <lib/hex.h>

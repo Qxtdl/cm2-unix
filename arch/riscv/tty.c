@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <kernel/device.h>
-#include <kernel/majors.h>
+#include <uapi/majors.h>
 #include <kernel/tty.h>
 #include <arch/riscv/memorymap.h>
 

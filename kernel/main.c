@@ -5,7 +5,7 @@
 #include <kernel/tty.h>
 #include <kernel/block.h>
 #include <kernel/tilegpu.h>
-#include <kernel/majors.h>
+#include <uapi/majors.h>
 #include <kernel/proc.h>
 #include <kernel/syscall.h>
 #include <kernel/panic.h>

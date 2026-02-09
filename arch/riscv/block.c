@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <kernel/block.h>
-#include <kernel/majors.h>
+#include <uapi/majors.h>
 
 struct disk_hw_interface {
     uint8_t write;
