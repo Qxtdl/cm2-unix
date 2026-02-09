@@ -1,23 +1,18 @@
 #include <kernel/kshell.h>
 
+
 #include <lib/stdlib.h>
 #include <lib/kprint.h>
 #include <lib/hex.h>
 
-#include <kernel/device.h>
-#include <kernel/majors.h>
-#include <kernel/syscall.h>
+#include <uapi/dev.h>
+#include <uapi/majors.h>
+#include <uapi/syscalls.h>
 
-#include <kernel/block.h>
-#include <kernel/tilegpu.h>
-#include <kernel/tty.h>
+#include <uapi/tty.h>
+#include <uapi/tilegpu.h>
 
-#include <fs/fs.h>
-#include <fs/vfs.h>
-#include <fs/devfs.h>
-#include <fs/romfs.h>
-
-
+#include <uapi/vfs.h>
 
 [[gnu::aligned(16)]] uint8_t kshell_thread_stack[KSHELL_STACK_SIZE];
 const char shell_name[] = "Shell v0.2.1\n";
