@@ -3,6 +3,7 @@
 #include <kernel/device.h>
 #include <kernel/panic.h>
 #include <kernel/proc.h>
+#include <lib/kprint.h>
 #include <lib/stdlib.h>
 #include <lib/alloc.h>
 #include <fs/vfs.h>
@@ -51,6 +52,22 @@ void (*syscall_update_table[])(struct proc* process) = {
 
 #define SYSCALL_COUNT sizeof(syscall_setup_table)/sizeof(void*)
 
+static void set_read_state(fs_read_t* state, struct fd* desc, void* buffer, int count)
+{
+    state->buffer = buffer;
+    state->count = count;
+    state->descriptor = desc;
+    state->fs = desc->file->fs;
+    state->req = NULL;
+    state->bytes_read = 0;
+}
+
+static void block_proc()
+{
+    current_process->state = BLOCKED;
+    current_process->syscall_state = SYSCALL_STATE_BEGIN;
+}
+
 //syscall from user process
 
 // int open(const char* path, uint8_t flags)
@@ -60,8 +77,7 @@ void sys_open()
     walk_path_init(&process->open_state.walker, (const char*) syscall_args[1]);
     
     //block the process
-    process->state = BLOCKED;
-    process->syscall_state = SYSCALL_STATE_BEGIN;
+    block_proc();
 }
 
 void sys_open_update(struct proc* process)
@@ -96,15 +112,10 @@ void sys_read()
         process->return_value = -1;
         return;
     }
-    process->read_state.fs.descriptor = descriptor;
-    process->read_state.fs.buffer = (void*) syscall_args[2];
-    process->read_state.fs.count = syscall_args[3];
-    process->read_state.fs.bytes_read = 0;
-    process->read_state.fs.fs = descriptor->file->fs;
-    process->read_state.fs.req = NULL;
     
-    process->state = BLOCKED;
-    process->syscall_state = SYSCALL_STATE_BEGIN;
+    set_read_state(&process->read_state.fs, descriptor, (void*) syscall_args[2], syscall_args[3]);
+
+    block_proc();
 }
 
 void sys_read_update(struct proc* process)
@@ -129,15 +140,10 @@ void sys_write()
         process->return_value = -1;
         return;
     }
-    process->write_state.fs.descriptor = descriptor;
-    process->write_state.fs.buffer = (void*) syscall_args[2];
-    process->write_state.fs.count = syscall_args[3];
-    process->write_state.fs.bytes_written = 0;
-    process->write_state.fs.fs = descriptor->file->fs;
-    process->write_state.fs.req = NULL;
     
-    process->state = BLOCKED;
-    process->syscall_state = SYSCALL_STATE_BEGIN;
+    set_read_state((fs_read_t*) &process->write_state.fs, descriptor, (void*) syscall_args[2], syscall_args[3]);
+
+    block_proc();
 }
 
 void sys_write_update(struct proc* process)
@@ -202,15 +208,10 @@ void sys_readdir()
         process->return_value = -1;
         return;
     }
-    process->read_state.fs.descriptor = descriptor;
-    process->read_state.fs.buffer = (void*) syscall_args[2];
-    process->read_state.fs.count = syscall_args[3];
-    process->read_state.fs.bytes_read = 0;
-    process->read_state.fs.fs = descriptor->file->fs;
-    process->read_state.fs.req = NULL;
     
-    process->state = BLOCKED;
-    process->syscall_state = SYSCALL_STATE_BEGIN;
+    set_read_state(&process->read_state.fs, descriptor, (void*) syscall_args[2], syscall_args[3]);
+
+    block_proc();
 }
 
 void sys_readdir_update(struct proc* process)
@@ -249,46 +250,52 @@ void sys_yield()
     //yield does nothing lol
 }
 
-/*
-//int read(int fd, void* buffer, uint32_t count)
-void sys_read()
-{
-    struct proc* process = current_process;
-    struct fd* descriptor = proc_get_fd(syscall_args[1]);
-    if (descriptor == NULL) {
-        process->return_value = -1;
-        return;
-    }
-    process->read_state.fs.descriptor = descriptor;
-    process->read_state.fs.buffer = (void*) syscall_args[2];
-    process->read_state.fs.count = syscall_args[3];
-    process->read_state.fs.bytes_read = 0;
-    process->read_state.fs.fs = descriptor->file->fs;
-    process->read_state.fs.req = NULL;
-    
-    process->state = BLOCKED;
-    process->syscall_state = SYSCALL_STATE_BEGIN;
-}
-*/
 
 //pid_t exec(const char *path, const char* argv[])
 void sys_exec()
 {
-    path_walk_init(&process->exec_state.walker, (const char*) syscall_args[1];
+    walk_path_init(&current_process->exec_state.walker, (const char*) syscall_args[1]);
+    current_process->exec_state.descriptor.file = NULL;
+    
+    block_proc();
 }
 
 void sys_exec_update(struct proc* process)
 {
-	int8_t rt = walk_path(&process->exe_state.walker);
+    struct fd* f = &process->exec_state.descriptor;
+    fs_read_t* rstate = &process->exec_state.fs;
+
+    if (f->file) {
+        int8_t stat = rstate->fs->fops->read(rstate);
+        if (stat < 0) {
+            proc_resume(process, -1);
+            return;
+        } else if (stat == 1) {
+            //TODO: execute the loaded binary
+
+            proc_resume(process, 0);
+            return;
+        }
+        return;
+    }
+
+	int8_t rt = walk_path(&process->exec_state.walker);
 	if (rt < 0) {
 		proc_resume(process, -1);
 	} else if (rt == 1) {
-		void *program = malloc(process->exe_state.walker.fs_state.dir->romfs.length);
+        struct inode* file = process->exec_state.walker.fs_state.dir;
+        void *program = malloc(file->romfs.length);
 		if (!program) {
-			/* TODO: handle malloc faliure */			
+			proc_resume(process, -1); //out of memory condition
+            return;
 		}
-		process->exe_state.fs.fs = process->exe_state.walker.fs_state.dir->fs;
-		process->exe_state.fs.buffer = program;
+        
+        f->file = file;
+        f->flags = FD_R;
+        f->offset = 0; //start at the begining of the file
+
+        //set the read state
+        set_read_state(rstate, f, program, file->romfs.length);
 	}
 }
 
@@ -339,10 +346,6 @@ void sys_mount_update(struct proc* process)
 
 }
 
-struct procinfo {
-    pid_t upid;
-    enum proc_state state;
-};
 
 //int sysctl(int cmd, void* buff, int count)
 void sys_sysctl()
