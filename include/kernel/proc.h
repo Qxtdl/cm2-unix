@@ -30,6 +30,11 @@ typedef struct {
     fs_write_t fs;
 } vfs_write_t;
 
+typedef struct {
+	path_walker_t walker;
+	fs_read_t fs;
+} exe_t;
+
 #define SYSCALL_STATE_NIL 255
 #define SYSCALL_STATE_BEGIN 0
 
@@ -60,6 +65,7 @@ struct proc {
         vfs_open_t open_state;
         vfs_read_t read_state;
         vfs_write_t write_state;
+        exec_t exec_state;
     };
 };
 

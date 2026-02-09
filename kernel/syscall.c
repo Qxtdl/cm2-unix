@@ -3,9 +3,9 @@
 #include <kernel/device.h>
 #include <kernel/panic.h>
 #include <kernel/proc.h>
-#include <fs/vfs.h>
-#include <lib/kprint.h>
 #include <lib/stdlib.h>
+#include <lib/alloc.h>
+#include <fs/vfs.h>
 #include <stddef.h>
 
 
@@ -249,14 +249,47 @@ void sys_yield()
     //yield does nothing lol
 }
 
+/*
+//int read(int fd, void* buffer, uint32_t count)
+void sys_read()
+{
+    struct proc* process = current_process;
+    struct fd* descriptor = proc_get_fd(syscall_args[1]);
+    if (descriptor == NULL) {
+        process->return_value = -1;
+        return;
+    }
+    process->read_state.fs.descriptor = descriptor;
+    process->read_state.fs.buffer = (void*) syscall_args[2];
+    process->read_state.fs.count = syscall_args[3];
+    process->read_state.fs.bytes_read = 0;
+    process->read_state.fs.fs = descriptor->file->fs;
+    process->read_state.fs.req = NULL;
+    
+    process->state = BLOCKED;
+    process->syscall_state = SYSCALL_STATE_BEGIN;
+}
+*/
+
+//pid_t exec(const char *path, const char* argv[])
 void sys_exec()
 {
-
+    path_walk_init(&process->exec_state.walker, (const char*) syscall_args[1];
 }
 
 void sys_exec_update(struct proc* process)
 {
-
+	int8_t rt = walk_path(&process->exe_state.walker);
+	if (rt < 0) {
+		proc_resume(process, -1);
+	} else if (rt == 1) {
+		void *program = malloc(process->exe_state.walker.fs_state.dir->romfs.length);
+		if (!program) {
+			/* TODO: handle malloc faliure */			
+		}
+		process->exe_state.fs.fs = process->exe_state.walker.fs_state.dir->fs;
+		process->exe_state.fs.buffer = program;
+	}
 }
 
 //void exit(int return_code)
