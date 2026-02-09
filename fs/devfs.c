@@ -73,6 +73,7 @@ int8_t devfs_read(fs_read_t* state)
     if (state->req->state == DEVICE_STATE_FINISHED) {
         state->bytes_read = state->req->count;
         state->descriptor->offset += state->bytes_read;
+        device_free_req(state->req);
         return 1;
     }
 
@@ -91,6 +92,7 @@ int8_t devfs_write(fs_write_t* state)
     if (state->req->state == DEVICE_STATE_FINISHED) {
         state->bytes_written = state->req->count;
         state->descriptor->offset += state->bytes_written;
+        device_free_req(state->req);
         return 1;
     }
 
@@ -117,7 +119,7 @@ int8_t devfs_readdir(fs_read_t* state) {
         dirent->mode = FS_MODE_DEV;
         dirent->size = 0; //should use ioctl to find size of device
         dirent->d_ino = DEVFS_CREATE_INO(dir_i-1);
-        strncpy(dirent->name, (char*) file_entry->name, FS_INAME_LEN);
+        strlcpy(dirent->name, (char*) file_entry->name, FS_INAME_LEN - 1);
     }
     state->bytes_read = ((++dir_i) << 16) | buff_i;
 
