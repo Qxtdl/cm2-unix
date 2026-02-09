@@ -109,8 +109,7 @@ int romfs_mount(struct inode* mountpoint, struct device* dev, const char* args)
     return 0;
 }
 
-//fuck gcc
-__attribute__((optimize("O0"))) int8_t romfs_read(fs_read_t* state)
+int8_t romfs_read(fs_read_t* state)
 {
     
     struct inode* file = state->descriptor->file;
@@ -149,7 +148,7 @@ int8_t romfs_readdir(fs_read_t* state)
     dirent->mode = file_entry->mode;
     dirent->size = file_entry->length;
     dirent->d_ino = ROMFS_CREATE_INO(file_entry->data);
-    strncpy(dirent->name, (char*) file_entry->name, FS_INAME_LEN);
+    strlcpy(dirent->name, (char*) file_entry->name, FS_INAME_LEN - 1);
     
     if (i == state->count) {
         return 1;
