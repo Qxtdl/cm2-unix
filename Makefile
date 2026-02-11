@@ -9,7 +9,7 @@ RAYLIB ?= true
 EMULATOR ?= $(ROOT)/emulator/riscv/cm2-riscv-emulator
 
 # the filesystems
-FS_SELECT = $(ROOT)/fs/fs.c $(ROOT)/fs/vfs.c $(ROOT)/fs/romfs.c $(ROOT)/fs/devfs.c
+FS_SELECT = $(ROOT)/fs/fs.c $(ROOT)/fs/vfs.c $(ROOT)/fs/romfs.c $(ROOT)/fs/devfs.c $(ROOT)/fs/fatfs.c
 
 #source files
 CSRCS = $(FS_SELECT) \
@@ -70,7 +70,7 @@ image: $(MN_FILE)
 	/bin/env python3 $(ROOT)/scripts/$(ARCH)_encoder.py image.bin
 
 run: image.bin
-	$(MAKE) -C $(EMULATOR) run ROOT="$(EMULATOR)" OUTPUT_ARGS="$(ROOT)/image.bin $(EMULATOR)/emulator-tilesheet/minesweeper.bmp $(EMULATOR)/disk_dump.bin"
+	$(MAKE) -C $(EMULATOR) run ROOT="$(EMULATOR)" OUTPUT_ARGS="$(ROOT)/image.bin $(EMULATOR)/emulator-tilesheet/minesweeper.bmp $(ROOT)/fat8.img"
 
 tools:
 	$(MAKE) -C $(EMULATOR) all ROOT="$(EMULATOR)" RAYLIB="$(RAYLIB)" OPTIMIZE=true
