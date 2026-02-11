@@ -147,6 +147,7 @@ static inline uint8_t tty_read(
             return 1;
         }
         else if (c == 127 || c == 8) {
+        	if (!(i >= 1)) return 0;
             ((char*) current_req->buffer)[--i] = 0;
             tty->current_bytes_copied = i;
             tty_interface->character = ' ';
